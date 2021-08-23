@@ -10,27 +10,41 @@ class Database:
         with sqlite3.connect(self.database_name) as connection:
             connection.execute("CREATE TABLE IF NOT EXISTS user("
                                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                               "first_name TEXT NOT NULL,"
-                               "last_name TEXT NOT NULL,"
+                               "fullname TEXT DEFAULT 'NULL' NOT NULL,"
+                               "bio TEXT DEFAULT 'NULL' NOT NULL,"
                                "username TEXT NOT NULL,"
                                "email_address TEXT NOT NULL,"
-                               "address TEXT NOT NULL,"
+                               "phone_number TEXT DEFAULT 'NULL' NOT NULL,"
+                               "gender TEXT DEFAULT 'NULL' NOT NULL,"
                                "password TEXT NOT NULL)")
 
         return "user table created successfully"
 
     #   FUNCTION WILL CREATE THE PRODUCT TABLE
-    def create_product_table(self):
+    def create_post_table(self):
         with sqlite3.connect(self.database_name) as connection:
-            connection.execute("CREATE TABLE IF NOT EXISTS product("
+            connection.execute("CREATE TABLE IF NOT EXISTS post("
                                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                               "name TEXT NOT NULL,"
-                               "description TEXT NOT NULL,"
-                               "price TEXT NOT NULL,"
-                               "category TEXT NOT NULL,"
-                               "review TEXT NOT NULL)")
+                               "name TEXT DEFAULT 'NULL' NOT NULL,"
+                               "date_created TEXT DEFAULT 'NULL' NOT NULL,"
+                               "post TEXT DEFAULT 'NULL' NOT NULL,"
+                               "likes_amount TEXT DEFAULT 'NULL' NOT NULL,"
+                               "user_id INTEGER NOT NULL,"
+                               "FOREIGN KEY (user_id) REFERENCES user (id))")
 
-        return "product table created successfully"
+        return "post table created successfully"
+
+    #   FUNCTION WILL CREATE THE PRODUCT TABLE
+    def create_comment_table(self):
+        with sqlite3.connect(self.database_name) as connection:
+            connection.execute("CREATE TABLE IF NOT EXISTS comment("
+                               "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                               "date_created TEXT DEFAULT 'NULL' NOT NULL,"
+                               "comment TEXT DEFAULT 'NULL' NOT NULL,"
+                               "user_id INTEGER NOT NULL,"
+                               "FOREIGN KEY (user_id) REFERENCES user (id))")
+
+        return "comment table created successfully"
 
     #   FUNCTION WILL GET ALL THE USERS IN THE DATABASE AND RETURN THEM
     def get_users(self):
