@@ -1,3 +1,5 @@
+from flask_mail import Message
+
 class Utilities:
     #   FUNCTION WILL TEST IF GIVEN input IS EMPTY OR NOT
     def not_empty(self, user_input):
@@ -23,3 +25,13 @@ class Utilities:
 
         #   IF EVERYTHING CHECKS OUT, RETURN True
         return True
+
+    #   FUNCTION WILL SEND AN EMAIL TO THE PROVIDED email_address
+    def send_email(self, mail, email_address, first_name):
+        email_to_send = Message('Welcome to the Radical Store.', sender='notbrucewayne71@gmail.com',
+                                recipients=[email_address])
+        email_to_send.body = f"Congratulations {first_name} on a successful registration. \n\n" \
+                             f"Welcome to the Radical Store. family, browse around and make sure to enjoy the " \
+                             f"experience. "
+
+        mail.send(email_to_send)

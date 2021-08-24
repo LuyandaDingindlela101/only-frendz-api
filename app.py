@@ -4,6 +4,7 @@ import hmac
 from utilities import Utilities
 from database_connection import Database
 
+from flask_mail import Mail
 from flask_cors import CORS
 from datetime import timedelta
 from flask import Flask, request, jsonify
@@ -31,7 +32,8 @@ def fetch_users():
     #   LOOP THROUGH THE db_users
     for user in db_users:
         #   CREATE A NEW User OBJECT
-        users_array.append(User(user[0], user[1], user[2], user[3], user[4], user[5], user[6]))
+        print(user)
+        users_array.append(User(user[3], user[0], user[6], user[7], user[3], user[1], user[5], user[4]))
 
     #   RETURN THE users_array
     return users_array
@@ -53,10 +55,19 @@ def identity(payload):
 app = Flask(__name__)
 app.debug = True
 
+#   CONFIGURATIONS FOR THE MAIL AND APP TO WORK
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USE_TLS'] = False
+app.config['SECRET_KEY'] = "super-secret"
+app.config['MAIL_SERVER'] = "smtp.gmail.com"
+app.config['MAIL_PASSWORD'] = "notBruceWayne"
+app.config['MAIL_USERNAME'] = "notbrucewayne71@gmail.com"
 app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=86400)
 
 #   INITIALISE THE EXTENSIONS WITH RELEVANT PARAMETERS
 CORS(app)
+mail = Mail(app)
 utilities = Utilities()
 database = Database("only_frendz.db")
 jwt = JWT(app, authenticate, identity)
@@ -79,3 +90,149 @@ userid_table = {u.id: u for u in users}
 def protected():
     return '%s' % current_identity
 
+
+#   ROUTE WILL BE USED TO REGISTER A NEW USER, ROUTE ONLY ACCEPTS A POST METHOD
+@app.route('/user-registration/', methods=["POST"])
+def register():
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    try:
+        #   MAKE SURE THE request.method IS A POST
+        if request.method == "POST":
+            #   GET THE FORM DATA TO BE SAVED
+            username = request.json['username']
+            password = request.json['password']
+            email_address = request.json['email_address']
+
+            #   MAKE SURE THAT ALL THE ENTRIES ARE VALID
+            if utilities.not_empty(username) and utilities.not_empty(password) and utilities.not_empty(
+                    email_address) and utilities.is_email(email_address):
+                #   CALL THE get_user FUNCTION TO GET THE user
+                user = database.get_user(username, password)
+
+                #   IF user EXISTS, THEN LOG THE IN
+                if user:
+                    response["status_code"] = 409
+                    response["message"] = "user already exists"
+                    response["email_status"] = "email not sent"
+                else:
+                    #   CALL THE register_user FUNCTION TO REGISTER THE USER
+                    database.register_user(password, username, email_address)
+                    #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
+                    # utilities.send_email(mail, email_address, username)
+                    #   GET THE NEWLY REGISTERED USER
+                    user = database.get_user(username, password)
+
+                    global users
+                    users = fetch_users()
+
+                    #   UPDATE THE response
+                    response["user"] = user
+                    response["status_code"] = 201
+                    response["message"] = "registration successful"
+                    response["email_status"] = "Email was successfully sent"
+    except ValueError:
+        #   UPDATE THE response
+        response["status_code"] = 409
+        response["current_user"] = "none"
+        response["message"] = "inputs are not valid"
+        response["email_status"] = "email not sent"
+    finally:
+        #   RETURN THE response
+        return response
+
+
+#   ROUTE WILL BE USED TO LOG A REGISTERED USER IN, ROUTE ONLY ACCEPTS A POST METHOD
+@app.route("/user-login/", methods=["POST"])
+def login():
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    #   MAKE SURE THE request.method IS A POST
+    if request.method == "POST":
+        try:
+            #   GET THE FORM DATA TO BE SAVED
+            username = request.json['username']
+            password = request.json['password']
+
+            #   MAKE SURE THAT ALL THE ENTRIES ARE VALID
+            if utilities.not_empty(username) and utilities.not_empty(password):
+                #   CALL THE get_user FUNCTION TO GET THE user
+                user = database.get_user(username, password)
+
+                #   IF user EXISTS, THEN LOG THE IN
+                if user:
+                    #   UPDATE THE response
+                    response["status_code"] = 201
+                    response["current_user"] = user
+                    response["message"] = "login successful"
+                else:
+                    #   UPDATE THE response
+                    response["status_code"] = 409
+                    response["current_user"] = "none"
+                    response["message"] = "login unsuccessful"
+        except ValueError:
+            #   UPDATE THE response
+            response["status_code"] = 409
+            response["user"] = "none"
+            response["message"] = "inputs are not valid"
+            response["email_status"] = "email not sent"
+        finally:
+            #   RETURN THE response
+            return response
+
+
+#   ROUTE WILL BE USED TO LOG A REGISTERED USER IN, ROUTE ONLY ACCEPTS A POST METHOD
+@app.route("/delete-user/<int:user_id>/", methods=["GET"])
+def delete_user(user_id):
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    try:
+        #   MAKE SURE THE request.method IS A POST
+        if request.method == "GET":
+            if database.delete_user(user_id) == "user deleted":
+                response['status_code'] = 200
+                response['message'] = 'User deleted successfully'
+            else:
+                response['status_code'] = 409
+                response['message'] = 'User not deleted'
+    except ValueError:
+        #   UPDATE THE response
+        response["status_code"] = 409
+        response['message'] = 'User not deleted'
+    finally:
+        #   RETURN THE response
+        return response
+
+
+#   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
+@app.route('/create-post/', methods=["POST"])
+#   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+@jwt_required()
+def add_post():
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    #   MAKE SURE THE request.method IS A POST
+    if request.method == "POST":
+        try:
+            #   GET THE FORM DATA TO BE SAVED
+            post = request.json['post']
+            image_url = request.json['image_url']
+            user_id = request.json['user_id']
+
+            #   CALL THE save_product FUNCTION TO SAVE THE PRODUCT TO THE DATABASE
+            database.create_post(user_id, post, image_url)
+
+            #   UPDATE THE response
+            response["status_code"] = 201
+            response['message'] = "post successfully added"
+        except ValueError:
+            #   UPDATE THE response
+            response["status_code"] = 409
+            response['message'] = "inputs are not valid"
+        finally:
+            #   RETURN THE response
+            return response

@@ -25,9 +25,9 @@ class Database:
         with sqlite3.connect(self.database_name) as connection:
             connection.execute("CREATE TABLE IF NOT EXISTS post("
                                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                               "name TEXT DEFAULT 'NULL' NOT NULL,"
                                "date_created TEXT DEFAULT 'NULL' NOT NULL,"
                                "post TEXT DEFAULT 'NULL' NOT NULL,"
+                               "image_url TEXT DEFAULT 'NULL' NOT NULL,"
                                "likes_amount TEXT DEFAULT 'NULL' NOT NULL,"
                                "user_id INTEGER NOT NULL,"
                                "FOREIGN KEY (user_id) REFERENCES user (id))")
@@ -55,76 +55,102 @@ class Database:
             return cursor.fetchall()
 
     #   FUNCTION WILL REGISTER A NEW USER
-    def register_user(self, first_name, last_name, username, email_address, address, password):
+    def register_user(self, password, username, email_address):
         with sqlite3.connect(self.database_name) as connection:
             cursor = connection.cursor()
-            cursor.execute(f"INSERT INTO user( first_name, last_name, username, email_address, address, password )"
-                           f"VALUES( '{first_name}', '{last_name}', '{username}', '{email_address}', '{address}', '{password}' )")
+            cursor.execute(f"INSERT INTO user( password, username, email_address ) "
+                           f"VALUES( '{password}', '{username}', '{email_address}' )")
 
             connection.commit()
-
         return "user successfully registered"
 
     #   FUNCTION WILL LOG A REGISTERED USER IN
     def get_user(self, username, password):
-        #   THE WHERE CLAUSE WAS GIVING ISSUES SO I HAD TO FIND ALTERNATE WAY TO GET THE USER
-        #   GET ALL THE users FROM THE DATABASE
-        users = self.get_users()
-        #   LOOP THROUGH ALL THE users
-        for user in users:
-            #   CHECK IF THE user's USERNAME AND PASSWORD IS EQUAL TO THE username AND password PROVIDED
-            if user[3] == username and user[5] == password:
-                #   RETURN THE user
-                return user
-
-    #   FUNCTION WILL SAVE A PRODUCT TO THE DATABASE
-    def save_product(self, name, description, price, category, review):
         with sqlite3.connect(self.database_name) as connection:
             cursor = connection.cursor()
-            cursor.execute(f"INSERT INTO product( name, description, price, category, review )"
-                           f"VALUES( '{name}', '{description}', '{price}', '{category}', '{review}' )")
+            cursor.execute(f"SELECT * FROM user WHERE username='{username}' AND password='{password}'")
+
+            return cursor.fetchone()
+
+        # #   THE WHERE CLAUSE WAS GIVING ISSUES SO I HAD TO FIND ALTERNATE WAY TO GET THE USER
+        # #   GET ALL THE users FROM THE DATABASE
+        # users = self.get_users()
+        # #   LOOP THROUGH ALL THE users
+        # for user in users:
+        #     #   CHECK IF THE user's USERNAME AND PASSWORD IS EQUAL TO THE username AND password PROVIDED
+        #     if user[3] == username and user[5] == password:
+        #         #   RETURN THE user
+        #         return user
+
+    #   FUNCTION WILL DELETE A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
+    def delete_user(self, user_id):
+        with sqlite3.connect(self.database_name) as connection:
+            cursor = connection.cursor()
+            cursor.execute(f"DELETE FROM user WHERE id='{user_id}'")
+
+            connection.commit()
+        return "user deleted"
+
+    #   FUNCTION WILL SAVE A PRODUCT TO THE DATABASE
+    def create_post(self, user_id, post, image_url):
+        with sqlite3.connect(self.database_name) as connection:
+            cursor = connection.cursor()
+            cursor.execute(f"INSERT INTO post( user_id, post, image_url,  ) "
+                           f"VALUES( '{user_id}', '{post}', '{image_url}' )")
+
+            connection.commit()
+
+            return "post successfully added"
+
+    #   FUNCTION WILL GET ALL THE PRODUCTS FROM THE DATABASE AND RETURN THEM
+    def get_posts(self):
+        with sqlite3.connect(self.database_name) as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM post")
+
+            return cursor.fetchall()
+
+    #   FUNCTION WILL GET A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
+    def get_post(self, product_id):
+        with sqlite3.connect(self.database_name) as connection:
+            cursor = connection.cursor()
+            cursor.execute(f"SELECT * FROM post WHERE id={str(product_id)}")
+
+            return cursor.fetchone()
+
+    #   FUNCTION WILL DELETE A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
+    def delete_post(self, post_id):
+        with sqlite3.connect(self.database_name) as connection:
+            cursor = connection.cursor()
+            cursor.execute(f"DELETE FROM post WHERE id='{post_id}'")
+
+            connection.commit()
+        return "product deleted"
+
+    #   FUNCTION WILL SAVE A PRODUCT TO THE DATABASE
+    def create_comment(self, user_id, post_id, comment):
+        with sqlite3.connect(self.database_name) as connection:
+            cursor = connection.cursor()
+            cursor.execute(f"INSERT INTO post( user_id, post ) "
+                           f"VALUES( '{user_id}', '{post_id}' )")
 
             connection.commit()
 
             return "product successfully added"
 
     #   FUNCTION WILL GET ALL THE PRODUCTS FROM THE DATABASE AND RETURN THEM
-    def get_all_products(self):
+    def get_comments(self):
         with sqlite3.connect(self.database_name) as connection:
             cursor = connection.cursor()
-            cursor.execute("SELECT * FROM product")
+            cursor.execute("SELECT * FROM post")
 
             return cursor.fetchall()
 
-    #   FUNCTION WILL GET A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
-    def get_one_product(self, product_id):
-        with sqlite3.connect(self.database_name) as connection:
-            cursor = connection.cursor()
-            cursor.execute(f"SELECT * FROM product WHERE id={str(product_id)}")
-
-            return cursor.fetchone()
-
     #   FUNCTION WILL DELETE A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
-    def remove_product(self, product_id):
+    def delete_comment(self, comment_id):
         with sqlite3.connect(self.database_name) as connection:
             cursor = connection.cursor()
-            cursor.execute(f"DELETE FROM product WHERE id={str(product_id)}")
+            cursor.execute(f"DELETE FROM comment WHERE id='{comment_id}'")
 
             connection.commit()
-        return "product deleted"
-
-    #   FUNCTION WILL EDIT A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
-    def update_product(self, row_name, new_value, product_id):
-        with sqlite3.connect(self.database_name) as connection:
-            cursor = connection.cursor()
-            cursor.execute(f"UPDATE product SET {row_name} = '{str(new_value)}' WHERE id = {str(product_id)}")
-
-            connection.commit()
-        return "product edited"
-
-    def update_again(self, name, description, price, category, review, product_id):
-        with sqlite3.connect(self.database_name) as connection:
-            cursor = connection.cursor()
-            cursor.execute(f"UPDATE product SET name = {name}, description = '{description}', price = '{price}', "
-                           f"category = '{category}', review = {review} WHERE id = {str(product_id)}")
-            print("edited")
+        return "comment deleted"
