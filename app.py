@@ -257,13 +257,13 @@ def get_posts():
             #   UPDATE THE response
             response['status_code'] = 201
             response['posts'] = posts
-            response["message"] = "products retrieved successfully"
+            response["message"] = "posts retrieved successfully"
 
         else:
             #   UPDATE THE response
             response['status_code'] = 409
             response['posts'] = "none"
-            response['message'] = "there are no products in the database"
+            response['message'] = "there are no posts in the database"
 
     #   RETURN THE response
     return response
@@ -281,7 +281,7 @@ def get_post(post_id):
         #   GET A PRODUCT FROM THE DATABASE
         post = database.get_post(post_id)
 
-        if utilities.not_empty(post):
+        if post:
             #   UPDATE THE response
             response["status_code"] = 201
             response["post"] = post
@@ -333,11 +333,11 @@ def add_comment():
             date_created = today.strftime("%B %d, %Y")
 
             #   CALL THE save_product FUNCTION TO SAVE THE PRODUCT TO THE DATABASE
-            database.create_post(user_id, comment, post_id, date_created)
+            database.create_comment(user_id, comment, post_id, date_created)
 
             #   UPDATE THE response
             response["status_code"] = 201
-            response['message'] = "post successfully added"
+            response['message'] = "comment successfully added"
         except ValueError:
             #   UPDATE THE response
             response["status_code"] = 409
@@ -346,3 +346,47 @@ def add_comment():
             #   RETURN THE response
             return response
 
+
+#   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
+@app.route('/get-comments/', methods=["GET"])
+@jwt_required()
+def get_comments():
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    #   MAKE SURE THE request.method IS A GET
+    if request.method == "GET":
+        #   GET ALL THE PRODUCTS FROM THE DATABASE
+        comments = database.get_comments()
+
+        if len(comments) > 0:
+            #   UPDATE THE response
+            response['status_code'] = 201
+            response['comments'] = comments
+            response["message"] = "comments retrieved successfully"
+
+        else:
+            #   UPDATE THE response
+            response['status_code'] = 409
+            response['comments'] = "none"
+            response['message'] = "there are no comments in the database"
+
+    #   RETURN THE response
+    return response
+
+
+@app.route("/delete-comment/<int:comment_id>/", methods=["GET"])
+#   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+@jwt_required()
+def delete_comment(comment_id):
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    #   CALL THE delete_product AND PASS IN THE product_id
+    database.delete_comment(comment_id)
+
+    #   UPDATE THE response
+    response['status_code'] = 201
+    response['message'] = "comment deleted successfully."
+
+    return response

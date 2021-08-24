@@ -125,7 +125,7 @@ class Database:
     def create_comment(self, user_id, comment, post_id, date_created):
         with sqlite3.connect(self.database_name) as connection:
             cursor = connection.cursor()
-            cursor.execute(f"INSERT INTO post( user_id, comment, post_id, date_created ) "
+            cursor.execute(f"INSERT INTO comment( user_id, comment, post_id, date_created ) "
                            f"VALUES( '{user_id}', '{comment}', '{post_id}', '{date_created}' )")
 
             connection.commit()
@@ -136,7 +136,7 @@ class Database:
     def get_comments(self):
         with sqlite3.connect(self.database_name) as connection:
             cursor = connection.cursor()
-            cursor.execute("SELECT * FROM post")
+            cursor.execute("SELECT * FROM comment")
 
             return cursor.fetchall()
 
@@ -148,3 +148,4 @@ class Database:
 
             connection.commit()
         return "comment deleted"
+
