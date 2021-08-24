@@ -6,7 +6,7 @@ from database_connection import Database
 
 from flask_mail import Mail
 from flask_cors import CORS
-from datetime import timedelta
+from datetime import timedelta, date
 from flask import Flask, request, jsonify
 from flask_jwt import JWT, jwt_required, current_identity
 
@@ -218,13 +218,16 @@ def add_post():
     #   MAKE SURE THE request.method IS A POST
     if request.method == "POST":
         try:
+            today = date.today()
+
             #   GET THE FORM DATA TO BE SAVED
             post = request.json['post']
             image_url = request.json['image_url']
             user_id = request.json['user_id']
+            date_created = today.strftime("%B %d, %Y")
 
             #   CALL THE save_product FUNCTION TO SAVE THE PRODUCT TO THE DATABASE
-            database.create_post(user_id, post, image_url)
+            database.create_post(user_id, post, image_url, date_created)
 
             #   UPDATE THE response
             response["status_code"] = 201
@@ -236,3 +239,110 @@ def add_post():
         finally:
             #   RETURN THE response
             return response
+
+
+#   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
+@app.route('/get-posts/', methods=["GET"])
+@jwt_required()
+def get_posts():
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    #   MAKE SURE THE request.method IS A GET
+    if request.method == "GET":
+        #   GET ALL THE PRODUCTS FROM THE DATABASE
+        posts = database.get_posts()
+
+        if len(posts) > 0:
+            #   UPDATE THE response
+            response['status_code'] = 201
+            response['posts'] = posts
+            response["message"] = "products retrieved successfully"
+
+        else:
+            #   UPDATE THE response
+            response['status_code'] = 409
+            response['posts'] = "none"
+            response['message'] = "there are no products in the database"
+
+    #   RETURN THE response
+    return response
+
+
+#   ROUTE WILL BE USED TO VIEW A SINGLE PRODUCT, ROUTE ONLY ACCEPTS A GET METHOD
+@app.route('/get-post/<int:post_id>/', methods=["GET"])
+@jwt_required()
+def get_post(post_id):
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    #   MAKE SURE THE request.method IS A GET
+    if request.method == "GET":
+        #   GET A PRODUCT FROM THE DATABASE
+        post = database.get_post(post_id)
+
+        if utilities.not_empty(post):
+            #   UPDATE THE response
+            response["status_code"] = 201
+            response["post"] = post
+            response["message"] = "product retrieved successfully"
+        else:
+            #   UPDATE THE response
+            response["status_code"] = 409
+            response["post"] = "none"
+            response["message"] = "product not found"
+
+    #   RETURN THE response
+    return response
+
+
+@app.route("/delete-post/<int:post_id>/", methods=["GET"])
+#   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+@jwt_required()
+def delete_post(post_id):
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    #   CALL THE delete_product AND PASS IN THE product_id
+    database.delete_post(post_id)
+
+    #   UPDATE THE response
+    response['status_code'] = 201
+    response['message'] = "post deleted successfully."
+
+    return response
+
+
+#   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
+@app.route('/create-comment/', methods=["POST"])
+#   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+@jwt_required()
+def add_comment():
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    #   MAKE SURE THE request.method IS A POST
+    if request.method == "POST":
+        try:
+            today = date.today()
+
+            #   GET THE FORM DATA TO BE SAVED
+            comment = request.json['comment']
+            post_id = request.json['post_id']
+            user_id = request.json['user_id']
+            date_created = today.strftime("%B %d, %Y")
+
+            #   CALL THE save_product FUNCTION TO SAVE THE PRODUCT TO THE DATABASE
+            database.create_post(user_id, comment, post_id, date_created)
+
+            #   UPDATE THE response
+            response["status_code"] = 201
+            response['message'] = "post successfully added"
+        except ValueError:
+            #   UPDATE THE response
+            response["status_code"] = 409
+            response['message'] = "inputs are not valid"
+        finally:
+            #   RETURN THE response
+            return response
+

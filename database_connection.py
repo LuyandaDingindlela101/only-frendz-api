@@ -42,7 +42,9 @@ class Database:
                                "date_created TEXT DEFAULT 'NULL' NOT NULL,"
                                "comment TEXT DEFAULT 'NULL' NOT NULL,"
                                "user_id INTEGER NOT NULL,"
-                               "FOREIGN KEY (user_id) REFERENCES user (id))")
+                               "post_id INTEGER NOT NULL,"
+                               "FOREIGN KEY (user_id) REFERENCES user (id), "
+                               "FOREIGN KEY (post_id) REFERENCES post (id))")
 
         return "comment table created successfully"
 
@@ -72,16 +74,6 @@ class Database:
 
             return cursor.fetchone()
 
-        # #   THE WHERE CLAUSE WAS GIVING ISSUES SO I HAD TO FIND ALTERNATE WAY TO GET THE USER
-        # #   GET ALL THE users FROM THE DATABASE
-        # users = self.get_users()
-        # #   LOOP THROUGH ALL THE users
-        # for user in users:
-        #     #   CHECK IF THE user's USERNAME AND PASSWORD IS EQUAL TO THE username AND password PROVIDED
-        #     if user[3] == username and user[5] == password:
-        #         #   RETURN THE user
-        #         return user
-
     #   FUNCTION WILL DELETE A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
     def delete_user(self, user_id):
         with sqlite3.connect(self.database_name) as connection:
@@ -91,12 +83,13 @@ class Database:
             connection.commit()
         return "user deleted"
 
+
     #   FUNCTION WILL SAVE A PRODUCT TO THE DATABASE
-    def create_post(self, user_id, post, image_url):
+    def create_post(self, user_id, post, image_url, date_created):
         with sqlite3.connect(self.database_name) as connection:
             cursor = connection.cursor()
-            cursor.execute(f"INSERT INTO post( user_id, post, image_url,  ) "
-                           f"VALUES( '{user_id}', '{post}', '{image_url}' )")
+            cursor.execute(f"INSERT INTO post( user_id, post, image_url, date_created) "
+                           f"VALUES( '{user_id}', '{post}', '{image_url}', '{date_created}' )")
 
             connection.commit()
 
@@ -111,10 +104,10 @@ class Database:
             return cursor.fetchall()
 
     #   FUNCTION WILL GET A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
-    def get_post(self, product_id):
+    def get_post(self, post_id):
         with sqlite3.connect(self.database_name) as connection:
             cursor = connection.cursor()
-            cursor.execute(f"SELECT * FROM post WHERE id={str(product_id)}")
+            cursor.execute(f"SELECT * FROM post WHERE id={str(post_id)}")
 
             return cursor.fetchone()
 
@@ -125,14 +118,15 @@ class Database:
             cursor.execute(f"DELETE FROM post WHERE id='{post_id}'")
 
             connection.commit()
-        return "product deleted"
+        return "post deleted"
+
 
     #   FUNCTION WILL SAVE A PRODUCT TO THE DATABASE
-    def create_comment(self, user_id, post_id, comment):
+    def create_comment(self, user_id, comment, post_id, date_created):
         with sqlite3.connect(self.database_name) as connection:
             cursor = connection.cursor()
-            cursor.execute(f"INSERT INTO post( user_id, post ) "
-                           f"VALUES( '{user_id}', '{post_id}' )")
+            cursor.execute(f"INSERT INTO post( user_id, comment, post_id, date_created ) "
+                           f"VALUES( '{user_id}', '{comment}', '{post_id}', '{date_created}' )")
 
             connection.commit()
 
