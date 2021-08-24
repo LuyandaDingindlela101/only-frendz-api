@@ -93,7 +93,7 @@ class Database:
 
             connection.commit()
 
-            return "post successfully added"
+            return "post successfully created"
 
     #   FUNCTION WILL GET ALL THE PRODUCTS FROM THE DATABASE AND RETURN THEM
     def get_posts(self):
@@ -130,7 +130,7 @@ class Database:
 
             connection.commit()
 
-            return "product successfully added"
+            return "comment successfully added"
 
     #   FUNCTION WILL GET ALL THE PRODUCTS FROM THE DATABASE AND RETURN THEM
     def get_comments(self):
