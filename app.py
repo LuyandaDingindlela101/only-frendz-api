@@ -6,8 +6,8 @@ from database_connection import Database
 
 from flask_mail import Mail
 from flask_cors import CORS
+from flask import Flask, request
 from datetime import timedelta, date
-from flask import Flask, request, jsonify
 from flask_jwt import JWT, jwt_required, current_identity
 
 
@@ -78,6 +78,8 @@ print(database.create_user_table())
 print(database.create_post_table())
 #   CREATE THE COMMENT TABLE IF IT DOESNT EXIST
 print(database.create_comment_table())
+#   CREATE THE COMMENT TABLE IF IT DOESNT EXIST
+print(database.create_friendship_table())
 #   GET ALL THE USERS IN THE DATABASE
 users = fetch_users()
 
@@ -388,5 +390,66 @@ def delete_comment(comment_id):
     #   UPDATE THE response
     response['status_code'] = 201
     response['message'] = "comment deleted successfully."
+
+    return response
+
+
+@app.route("/make-friendship/<int:user_id>/<int:friend_id>/", methods=["POST"])
+#   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+@jwt_required()
+def make_friendship(user_id, friend_id):
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    today = date.today()
+    date_started = today.strftime("%B %d, %Y")
+
+    #   CALL THE delete_product AND PASS IN THE product_id
+    database.create_friendship(user_id, friend_id, date_started)
+
+    #   UPDATE THE response
+    response['status_code'] = 201
+    response['message'] = "friendship started"
+
+    return response
+
+
+@app.route("/get-friends/<int:user_id>/", methods=["GET"])
+#   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+@jwt_required()
+def get_friends(user_id):
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    #   CALL THE delete_product AND PASS IN THE product_id
+    friends = database.get_friends(user_id)
+
+    if friends:
+        #   UPDATE THE response
+        response["status_code"] = 201
+        response["friends"] = friends
+        response["message"] = "friends retrieved successfully"
+    else:
+        #   UPDATE THE response
+        response["status_code"] = 409
+        response["friends"] = "none"
+        response["message"] = "friends not found"
+
+    return response
+
+
+@app.route("/end-friendship/<int:user_id>/<int:friend_id>/", methods=["GET"])
+#   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+@jwt_required()
+def end_friendship(user_id, friend_id):
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    #   CALL THE delete_product AND PASS IN THE product_id
+    database.end_friendship(user_id, friend_id)
+
+    #   UPDATE THE response
+    response['status_code'] = 201
+    response['message'] = "friendship ended"
 
     return response

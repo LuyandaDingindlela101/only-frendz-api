@@ -48,6 +48,19 @@ class Database:
 
         return "comment table created successfully"
 
+    #   FUNCTION WILL CREATE THE PRODUCT TABLE
+    def create_friendship_table(self):
+        with sqlite3.connect(self.database_name) as connection:
+            connection.execute("CREATE TABLE IF NOT EXISTS friendship("
+                               "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                               "date_started TEXT DEFAULT 'NULL' NOT NULL,"
+                               "user_id INTEGER NOT NULL,"
+                               "friend_id INTEGER NOT NULL,"
+                               "FOREIGN KEY (user_id) REFERENCES user (id), "
+                               "FOREIGN KEY (friend_id) REFERENCES user (id))")
+
+        return "friendship table created successfully"
+
     #   FUNCTION WILL GET ALL THE USERS IN THE DATABASE AND RETURN THEM
     def get_users(self):
         with sqlite3.connect(self.database_name) as connection:
@@ -149,3 +162,27 @@ class Database:
             connection.commit()
         return "comment deleted"
 
+
+    def create_friendship(self, user_id, friend_id, date_started):
+        with sqlite3.connect(self.database_name) as connection:
+            cursor = connection.cursor()
+            cursor.execute(f"INSERT INTO friendship( user_id, friend_id, date_started ) "
+                           f"VALUES( '{user_id}', '{friend_id}', '{date_started}' )")
+
+            connection.commit()
+            return "friendship started"
+
+    def get_friends(self, user_id):
+        with sqlite3.connect(self.database_name) as connection:
+            cursor = connection.cursor()
+            cursor.execute(f"SELECT * FROM friendship WHERE user_id='{user_id}'")
+
+        return cursor.fetchall()
+
+    def end_friendship(self, user_id, friend_id):
+        with sqlite3.connect(self.database_name) as connection:
+            cursor = connection.cursor()
+            cursor.execute(f"DELETE FROM friendship WHERE user_id='{user_id}' AND friend_id='{friend_id}'")
+
+            connection.commit()
+        return "friendship ended"

@@ -15,17 +15,21 @@ class TestStringMethods(unittest.TestCase):
         database = Database("test.db")
         self.assertEqual(database.create_comment_table(), "comment table created successfully")
 
+    def test_create_friendship_table(self):
+        database = Database("test.db")
+        self.assertEqual(database.create_friendship_table(), "friendship table created successfully")
+
     def test_register_user(self):
         database = Database("test.db")
         self.assertEqual(database.register_user("password", "username", "email_address"), "user successfully registered")
 
     def test_create_post(self):
         database = Database("test.db")
-        self.assertEqual(database.save_product("1", "This is a post", "image url", "18-03-2021"), "post successfully created")
+        self.assertEqual(database.create_post("1", "This is a post", "image url", "18-03-2021"), "post successfully created")
 
-    def test_create_post(self):
+    def test_create_comment(self):
         database = Database("test.db")
-        self.assertEqual(database.create_comment("1", "This is a comment", "1", "18-03-2021"), "comment successfully created")
+        self.assertEqual(database.create_comment("1", "This is a comment", "1", "18-03-2021"), "comment successfully added")
 
     def test_delete_comment(self):
         database = Database("test.db")
@@ -35,3 +39,10 @@ class TestStringMethods(unittest.TestCase):
         database = Database("test.db")
         self.assertEqual(database.delete_post("1"), "post deleted")
 
+    def test_create_friendship(self):
+        database = Database("test.db")
+        self.assertEqual(database.create_friendship("1", "1", "18-03-2021"), "friendship started")
+
+    def test_end_friendship(self):
+        database = Database("test.db")
+        self.assertEqual(database.end_friendship("1", "1"), "friendship ended")
