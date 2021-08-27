@@ -35,3 +35,11 @@ class Utilities:
                              f"experience. "
 
         mail.send(email_to_send)
+
+    # This function create dictionaries out of SQL rows, so that the data follows JSON format
+    def dict_factory(self, cursor, row):
+        d = {}
+        for idx, col in enumerate(cursor.description):
+            d[col[0]] = row[idx]
+        return d
+

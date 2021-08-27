@@ -6,7 +6,7 @@ from database_connection import Database
 
 from flask_mail import Mail
 from flask_cors import CORS
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from datetime import timedelta, date
 from flask_jwt import JWT, jwt_required, current_identity
 
@@ -31,9 +31,9 @@ def fetch_users():
 
     #   LOOP THROUGH THE db_users
     for user in db_users:
-        #   CREATE A NEW User OBJECT
         print(user)
-        users_array.append(User(user[3], user[0], user[6], user[7], user[3], user[1], user[5], user[4]))
+        #   CREATE A NEW User OBJECT
+        users_array.append(User(user["bio"], user["id"], user["gender"], user["password"], user["username"], user["fullname"], user["phone_number"], user["email_address"]))
 
     #   RETURN THE users_array
     return users_array
@@ -142,7 +142,44 @@ def register():
         response["email_status"] = "email not sent"
     finally:
         #   RETURN THE response
-        return response
+        return jsonify(response)
+
+
+#   ROUTE WILL BE USED TO REGISTER A NEW USER, ROUTE ONLY ACCEPTS A POST METHOD
+@app.route('/user-update/<int:user_id>/', methods=["PUT"])
+def update_user(user_id):
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    try:
+        #   MAKE SURE THE request.method IS A POST
+        if request.method == "PUT":
+            #   GET THE FORM DATA TO BE SAVED
+            bio = request.json['bio']
+            username = request.json['username']
+            fullname = request.json['fullname']
+            password = request.json['new_password']
+            profile_img = request.json['profile_img']
+            phone_number = request.json['phone_number']
+            email_address = request.json['email_address']
+
+            #   MAKE SURE THAT ALL THE ENTRIES ARE VALID
+            if utilities.not_empty(username) and utilities.not_empty(password) and utilities.not_empty(email_address) \
+                    and utilities.not_empty(fullname) and utilities.not_empty(profile_img)\
+                    and utilities.not_empty(phone_number) and utilities.is_email(email_address):
+                #   CALL THE get_user FUNCTION TO GET THE user
+                database.update_user(user_id, bio, password, username, fullname, phone_number, email_address)
+                #   UPDATE THE response
+                response["status_code"] = 201
+                response["message"] = "update successful"
+    except ValueError:
+        #   UPDATE THE response
+        response["status_code"] = 409
+        response["message"] = "something went wrong"
+        response["email_status"] = "email not sent"
+    finally:
+        #   RETURN THE response
+        return jsonify(response)
 
 
 #   ROUTE WILL BE USED TO LOG A REGISTERED USER IN, ROUTE ONLY ACCEPTS A POST METHOD
@@ -182,7 +219,7 @@ def login():
             response["email_status"] = "email not sent"
         finally:
             #   RETURN THE response
-            return response
+            return jsonify(response)
 
 
 #   ROUTE WILL BE USED TO LOG A REGISTERED USER IN, ROUTE ONLY ACCEPTS A POST METHOD
@@ -206,7 +243,7 @@ def delete_user(user_id):
         response['message'] = 'User not deleted'
     finally:
         #   RETURN THE response
-        return response
+        return jsonify(response)
 
 
 #   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
@@ -240,7 +277,7 @@ def add_post():
             response['message'] = "inputs are not valid"
         finally:
             #   RETURN THE response
-            return response
+            return jsonify(response)
 
 
 #   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
@@ -268,7 +305,7 @@ def get_posts():
             response['message'] = "there are no posts in the database"
 
     #   RETURN THE response
-    return response
+    return jsonify(response)
 
 
 #   ROUTE WILL BE USED TO VIEW A SINGLE PRODUCT, ROUTE ONLY ACCEPTS A GET METHOD
@@ -295,7 +332,7 @@ def get_post(post_id):
             response["message"] = "product not found"
 
     #   RETURN THE response
-    return response
+    return jsonify(response)
 
 
 @app.route("/delete-post/<int:post_id>/", methods=["GET"])
@@ -312,7 +349,7 @@ def delete_post(post_id):
     response['status_code'] = 201
     response['message'] = "post deleted successfully."
 
-    return response
+    return jsonify(response)
 
 
 #   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
@@ -346,7 +383,7 @@ def add_comment():
             response['message'] = "inputs are not valid"
         finally:
             #   RETURN THE response
-            return response
+            return jsonify(response)
 
 
 #   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
@@ -374,7 +411,7 @@ def get_comments():
             response['message'] = "there are no comments in the database"
 
     #   RETURN THE response
-    return response
+    return jsonify(response)
 
 
 @app.route("/delete-comment/<int:comment_id>/", methods=["GET"])
@@ -391,7 +428,7 @@ def delete_comment(comment_id):
     response['status_code'] = 201
     response['message'] = "comment deleted successfully."
 
-    return response
+    return jsonify(response)
 
 
 @app.route("/make-friendship/<int:user_id>/<int:friend_id>/", methods=["POST"])
@@ -411,7 +448,7 @@ def make_friendship(user_id, friend_id):
     response['status_code'] = 201
     response['message'] = "friendship started"
 
-    return response
+    return jsonify(response)
 
 
 @app.route("/get-friends/<int:user_id>/", methods=["GET"])
@@ -435,7 +472,7 @@ def get_friends(user_id):
         response["friends"] = "none"
         response["message"] = "friends not found"
 
-    return response
+    return jsonify(response)
 
 
 @app.route("/end-friendship/<int:user_id>/<int:friend_id>/", methods=["GET"])
@@ -452,4 +489,4 @@ def end_friendship(user_id, friend_id):
     response['status_code'] = 201
     response['message'] = "friendship ended"
 
-    return response
+    return jsonify(response)

@@ -1,9 +1,11 @@
 import sqlite3
+from utilities import Utilities
 
 
 class Database:
     def __init__(self, database_name):
         self.database_name = database_name
+        self.utilities = Utilities()
 
     #   FUNCTION WILL CREATE THE USER TABLE
     def create_user_table(self):
@@ -11,6 +13,7 @@ class Database:
             connection.execute("CREATE TABLE IF NOT EXISTS user("
                                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                                "fullname TEXT DEFAULT 'NULL' NOT NULL,"
+                               "profile_img TEXT DEFAULT 'NULL' NOT NULL,"
                                "bio TEXT DEFAULT 'NULL' NOT NULL,"
                                "username TEXT NOT NULL,"
                                "email_address TEXT NOT NULL,"
@@ -64,6 +67,7 @@ class Database:
     #   FUNCTION WILL GET ALL THE USERS IN THE DATABASE AND RETURN THEM
     def get_users(self):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute("SELECT * FROM user")
 
@@ -72,6 +76,7 @@ class Database:
     #   FUNCTION WILL REGISTER A NEW USER
     def register_user(self, password, username, email_address):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute(f"INSERT INTO user( password, username, email_address ) "
                            f"VALUES( '{password}', '{username}', '{email_address}' )")
@@ -82,6 +87,7 @@ class Database:
     #   FUNCTION WILL LOG A REGISTERED USER IN
     def get_user(self, username, password):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute(f"SELECT * FROM user WHERE username='{username}' AND password='{password}'")
 
@@ -90,16 +96,28 @@ class Database:
     #   FUNCTION WILL DELETE A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
     def delete_user(self, user_id):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute(f"DELETE FROM user WHERE id='{user_id}'")
 
             connection.commit()
         return "user deleted"
 
+    def update_user(self, id, bio, password, username, fullname, phone_number, email_address):
+        with sqlite3.connect(self.database_name) as connection:
+            cursor = connection.cursor()
+            cursor.execute(f"UPDATE user SET bio = '{bio}', password = '{password}', username = '{username}', "
+                           f"fullname = '{fullname}', phone_number = '{phone_number}', email_address = '{email_address}' "
+                           f"WHERE id = '{id}'")
+
+            connection.commit()
+        return "user edited"
+
 
     #   FUNCTION WILL SAVE A PRODUCT TO THE DATABASE
     def create_post(self, user_id, post, image_url, date_created):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute(f"INSERT INTO post( user_id, post, image_url, date_created) "
                            f"VALUES( '{user_id}', '{post}', '{image_url}', '{date_created}' )")
@@ -111,6 +129,7 @@ class Database:
     #   FUNCTION WILL GET ALL THE PRODUCTS FROM THE DATABASE AND RETURN THEM
     def get_posts(self):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute("SELECT * FROM post")
 
@@ -119,6 +138,7 @@ class Database:
     #   FUNCTION WILL GET A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
     def get_post(self, post_id):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute(f"SELECT * FROM post WHERE id={str(post_id)}")
 
@@ -127,6 +147,7 @@ class Database:
     #   FUNCTION WILL DELETE A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
     def delete_post(self, post_id):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute(f"DELETE FROM post WHERE id='{post_id}'")
 
@@ -137,6 +158,7 @@ class Database:
     #   FUNCTION WILL SAVE A PRODUCT TO THE DATABASE
     def create_comment(self, user_id, comment, post_id, date_created):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute(f"INSERT INTO comment( user_id, comment, post_id, date_created ) "
                            f"VALUES( '{user_id}', '{comment}', '{post_id}', '{date_created}' )")
@@ -148,6 +170,7 @@ class Database:
     #   FUNCTION WILL GET ALL THE PRODUCTS FROM THE DATABASE AND RETURN THEM
     def get_comments(self):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute("SELECT * FROM comment")
 
@@ -156,6 +179,7 @@ class Database:
     #   FUNCTION WILL DELETE A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
     def delete_comment(self, comment_id):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute(f"DELETE FROM comment WHERE id='{comment_id}'")
 
@@ -165,6 +189,7 @@ class Database:
 
     def create_friendship(self, user_id, friend_id, date_started):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute(f"INSERT INTO friendship( user_id, friend_id, date_started ) "
                            f"VALUES( '{user_id}', '{friend_id}', '{date_started}' )")
@@ -174,6 +199,7 @@ class Database:
 
     def get_friends(self, user_id):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute(f"SELECT * FROM friendship WHERE user_id='{user_id}'")
 
@@ -181,6 +207,7 @@ class Database:
 
     def end_friendship(self, user_id, friend_id):
         with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
             cursor = connection.cursor()
             cursor.execute(f"DELETE FROM friendship WHERE user_id='{user_id}' AND friend_id='{friend_id}'")
 
