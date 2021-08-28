@@ -122,7 +122,9 @@ def register():
                     #   CALL THE register_user FUNCTION TO REGISTER THE USER
                     database.register_user(password, username, email_address)
                     #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
-                    # utilities.send_email(mail, email_address, username)
+                    subject = "Only Frendz account registration"
+                    message = "Congratulations on a successful registration. Lets make some frendz."
+                    utilities.send_email(mail, email_address, subject, message)
                     #   GET THE NEWLY REGISTERED USER
                     user = database.get_user(username, password)
 
@@ -203,19 +205,19 @@ def login():
                 #   IF user EXISTS, THEN LOG THE IN
                 if user:
                     #   UPDATE THE response
+                    response["user"] = user
                     response["status_code"] = 201
-                    response["current_user"] = user
                     response["message"] = "login successful"
                 else:
                     #   UPDATE THE response
+                    response["user"] = "none"
                     response["status_code"] = 409
-                    response["current_user"] = "none"
                     response["message"] = "login unsuccessful"
         except ValueError:
             #   UPDATE THE response
             response["status_code"] = 409
             response["user"] = "none"
-            response["message"] = "inputs are not valid"
+            response["message"] = "login unsuccessful"
             response["email_status"] = "email not sent"
         finally:
             #   RETURN THE response

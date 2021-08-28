@@ -27,12 +27,10 @@ class Utilities:
         return True
 
     #   FUNCTION WILL SEND AN EMAIL TO THE PROVIDED email_address
-    def send_email(self, mail, email_address, first_name):
-        email_to_send = Message('Welcome to the Radical Store.', sender='notbrucewayne71@gmail.com',
+    def send_email(self, mail, email_address, subject, message):
+        email_to_send = Message(f'{subject}', sender='notbrucewayne71@gmail.com',
                                 recipients=[email_address])
-        email_to_send.body = f"Congratulations {first_name} on a successful registration. \n\n" \
-                             f"Welcome to the Radical Store. family, browse around and make sure to enjoy the " \
-                             f"experience. "
+        email_to_send.body = f"{message}"
 
         mail.send(email_to_send)
 
