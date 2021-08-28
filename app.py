@@ -234,6 +234,7 @@ def get_user(user_id):
         if request.method == "GET":
             user = database.get_user_by_id(user_id)
 
+            #   IF THE USER EXISTS, ADD IT TO THE RESPONSE
             if user:
                 response['user'] = user
                 response['status_code'] = 201
@@ -382,10 +383,10 @@ def delete_post(post_id):
 
 
 #   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
-@app.route('/create-comment/', methods=["POST"])
+@app.route('/create-comment/<int:post_id>/<int:user_id>', methods=["POST"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
 @jwt_required()
-def add_comment():
+def add_comment(post_id, user_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
 
@@ -396,8 +397,6 @@ def add_comment():
 
             #   GET THE FORM DATA TO BE SAVED
             comment = request.json['comment']
-            post_id = request.json['post_id']
-            user_id = request.json['user_id']
             date_created = today.strftime("%B %d, %Y")
 
             #   CALL THE save_product FUNCTION TO SAVE THE PRODUCT TO THE DATABASE
