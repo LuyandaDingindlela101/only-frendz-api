@@ -224,6 +224,33 @@ def login():
             return jsonify(response)
 
 
+@app.route("/user/<int:user_id>/", methods=["GET"])
+def get_user(user_id):
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    try:
+        #   MAKE SURE THE request.method IS A POST
+        if request.method == "GET":
+            user = database.get_user_by_id(user_id)
+
+            if user:
+                response['user'] = user
+                response['status_code'] = 201
+                response['message'] = 'User retrieved successfully'
+            else:
+                response['user'] = 'none'
+                response['status_code'] = 409
+                response['message'] = 'User not found'
+    except ValueError:
+        #   UPDATE THE response
+        response["status_code"] = 409
+        response['message'] = 'something went wrong'
+    finally:
+        #   RETURN THE response
+        return jsonify(response)
+
+
 #   ROUTE WILL BE USED TO LOG A REGISTERED USER IN, ROUTE ONLY ACCEPTS A POST METHOD
 @app.route("/delete-user/<int:user_id>/", methods=["GET"])
 def delete_user(user_id):
@@ -234,7 +261,7 @@ def delete_user(user_id):
         #   MAKE SURE THE request.method IS A POST
         if request.method == "GET":
             if database.delete_user(user_id) == "user deleted":
-                response['status_code'] = 200
+                response['status_code'] = 201
                 response['message'] = 'User deleted successfully'
             else:
                 response['status_code'] = 409

@@ -73,6 +73,15 @@ class Database:
 
             return cursor.fetchall()
 
+    #   FUNCTION WILL GET A SPECIFIC USER BASED ON THE user_id
+    def get_user_by_id(self, user_id):
+        with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
+            cursor = connection.cursor()
+            cursor.execute(f"SELECT * FROM user WHERE id={str(user_id)}")
+
+            return cursor.fetchone()
+
     #   FUNCTION WILL REGISTER A NEW USER
     def register_user(self, password, username, email_address):
         with sqlite3.connect(self.database_name) as connection:
@@ -112,7 +121,6 @@ class Database:
 
             connection.commit()
         return "user edited"
-
 
     #   FUNCTION WILL SAVE A PRODUCT TO THE DATABASE
     def create_post(self, user_id, post, image_url, date_created):
@@ -154,7 +162,6 @@ class Database:
             connection.commit()
         return "post deleted"
 
-
     #   FUNCTION WILL SAVE A PRODUCT TO THE DATABASE
     def create_comment(self, user_id, comment, post_id, date_created):
         with sqlite3.connect(self.database_name) as connection:
@@ -185,7 +192,6 @@ class Database:
 
             connection.commit()
         return "comment deleted"
-
 
     def create_friendship(self, user_id, friend_id, date_started):
         with sqlite3.connect(self.database_name) as connection:
