@@ -125,11 +125,13 @@ def register():
                     subject = "Only Frendz account registration"
                     message = "Congratulations on a successful registration. Lets make some frendz."
                     utilities.send_email(mail, email_address, subject, message)
-                    #   GET THE NEWLY REGISTERED USER
-                    user = database.get_user(username, password)
 
+                    #   UPDATE THE GLOBAL users
                     global users
                     users = fetch_users()
+
+                    #   GET THE NEWLY REGISTERED USER
+                    user = database.get_user(username, password)
 
                     #   UPDATE THE response
                     response["user"] = user
@@ -149,6 +151,7 @@ def register():
 
 #   ROUTE WILL BE USED TO REGISTER A NEW USER, ROUTE ONLY ACCEPTS A POST METHOD
 @app.route('/user-update/<int:user_id>/', methods=["PUT"])
+@jwt_required()
 def update_user(user_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
