@@ -149,6 +149,21 @@ def register():
         return jsonify(response)
 
 
+@app.route('/users/', methods=["GET"])
+def get_users():
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    #   GET THE NEWLY REGISTERED USER
+    db_users = database.get_users()
+
+    #   UPDATE THE response
+    response["users"] = db_users
+    response["status_code"] = 201
+    response["message"] = "users successfully retrieved"
+
+    return response
+
 #   ROUTE WILL BE USED TO REGISTER A NEW USER, ROUTE ONLY ACCEPTS A POST METHOD
 @app.route('/user-update/<int:user_id>/', methods=["PUT"])
 @jwt_required()
