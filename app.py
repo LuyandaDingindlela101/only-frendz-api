@@ -31,9 +31,10 @@ def fetch_users():
 
     #   LOOP THROUGH THE db_users
     for user in db_users:
-        print(user)
         #   CREATE A NEW User OBJECT
-        users_array.append(User(user["bio"], user["id"], user["gender"], user["password"], user["username"], user["fullname"], user["phone_number"], user["email_address"]))
+        users_array.append(
+            User(user["bio"], user["id"], user["gender"], user["password"], user["username"], user["fullname"],
+                 user["phone_number"], user["email_address"]))
 
     #   RETURN THE users_array
     return users_array
@@ -60,8 +61,8 @@ app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USE_TLS'] = False
 app.config['SECRET_KEY'] = "super-secret"
+app.config['MAIL_PASSWORD'] = "!@mBvtmvn"
 app.config['MAIL_SERVER'] = "smtp.gmail.com"
-app.config['MAIL_PASSWORD'] = "notBruceWayne"
 app.config['MAIL_USERNAME'] = "notbrucewayne71@gmail.com"
 app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=86400)
 
@@ -164,6 +165,7 @@ def get_users():
 
     return response
 
+
 #   ROUTE WILL BE USED TO REGISTER A NEW USER, ROUTE ONLY ACCEPTS A POST METHOD
 @app.route('/user-update/<int:user_id>/', methods=["PUT"])
 @jwt_required()
@@ -185,7 +187,7 @@ def update_user(user_id):
 
             #   MAKE SURE THAT ALL THE ENTRIES ARE VALID
             if utilities.not_empty(username) and utilities.not_empty(password) and utilities.not_empty(email_address) \
-                    and utilities.not_empty(fullname) and utilities.not_empty(profile_img)\
+                    and utilities.not_empty(fullname) and utilities.not_empty(profile_img) \
                     and utilities.not_empty(phone_number) and utilities.is_email(email_address):
                 #   CALL THE get_user FUNCTION TO GET THE user
                 database.update_user(user_id, bio, password, username, fullname, phone_number, email_address)
