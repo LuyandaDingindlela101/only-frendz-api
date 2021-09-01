@@ -168,7 +168,7 @@ def get_users():
 
 #   ROUTE WILL BE USED TO REGISTER A NEW USER, ROUTE ONLY ACCEPTS A POST METHOD
 @app.route('/user-update/<int:user_id>/', methods=["PUT"])
-@jwt_required()
+# @jwt_required()
 def update_user(user_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -299,7 +299,7 @@ def delete_user(user_id):
 #   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
 @app.route('/create-post/', methods=["POST"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
-@jwt_required()
+# @jwt_required()
 def add_post():
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -332,7 +332,7 @@ def add_post():
 
 #   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
 @app.route('/get-posts/', methods=["GET"])
-@jwt_required()
+# @jwt_required()
 def get_posts():
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -360,7 +360,7 @@ def get_posts():
 
 #   ROUTE WILL BE USED TO VIEW A SINGLE PRODUCT, ROUTE ONLY ACCEPTS A GET METHOD
 @app.route('/get-post/<int:post_id>/', methods=["GET"])
-@jwt_required()
+# @jwt_required()
 def get_post(post_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -387,7 +387,7 @@ def get_post(post_id):
 
 @app.route("/delete-post/<int:post_id>/", methods=["GET"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
-@jwt_required()
+# @jwt_required()
 def delete_post(post_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -405,7 +405,7 @@ def delete_post(post_id):
 #   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
 @app.route('/create-comment/<int:post_id>/<int:user_id>', methods=["POST"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
-@jwt_required()
+# @jwt_required()
 def add_comment(post_id, user_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -436,7 +436,7 @@ def add_comment(post_id, user_id):
 
 #   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
 @app.route('/get-comments/', methods=["GET"])
-@jwt_required()
+# @jwt_required()
 def get_comments():
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -464,7 +464,7 @@ def get_comments():
 
 @app.route("/delete-comment/<int:comment_id>/", methods=["GET"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
-@jwt_required()
+# @jwt_required()
 def delete_comment(comment_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -481,7 +481,7 @@ def delete_comment(comment_id):
 
 @app.route("/make-friendship/<int:user_id>/<int:friend_id>/", methods=["POST"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
-@jwt_required()
+# @jwt_required()
 def make_friendship(user_id, friend_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -501,7 +501,7 @@ def make_friendship(user_id, friend_id):
 
 @app.route("/get-friends/<int:user_id>/", methods=["GET"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
-@jwt_required()
+# @jwt_required()
 def get_friends(user_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -525,7 +525,7 @@ def get_friends(user_id):
 
 @app.route("/end-friendship/<int:user_id>/<int:friend_id>/", methods=["GET"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
-@jwt_required()
+# @jwt_required()
 def end_friendship(user_id, friend_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
