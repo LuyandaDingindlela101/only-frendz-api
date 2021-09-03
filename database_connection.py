@@ -143,6 +143,15 @@ class Database:
 
             return cursor.fetchall()
 
+    #   FUNCTION WILL GET ALL THE PRODUCTS FROM THE DATABASE AND RETURN THEM
+    def get_user_posts(self, user_id):
+        with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
+            cursor = connection.cursor()
+            cursor.execute(f"SELECT * FROM post WHERE user_id = '{user_id}'")
+
+            return cursor.fetchall()
+
     #   FUNCTION WILL GET A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
     def get_post(self, post_id):
         with sqlite3.connect(self.database_name) as connection:

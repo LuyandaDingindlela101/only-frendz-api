@@ -358,6 +358,34 @@ def get_posts():
     return jsonify(response)
 
 
+#   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
+@app.route('/get-posts/<int:user_id>/', methods=["GET"])
+# @jwt_required()
+def get_users_posts(user_id):
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    #   MAKE SURE THE request.method IS A GET
+    if request.method == "GET":
+        #   GET ALL THE PRODUCTS FROM THE DATABASE
+        posts = database.get_user_posts(user_id)
+
+        if len(posts) > 0:
+            #   UPDATE THE response
+            response['status_code'] = 201
+            response['posts'] = posts
+            response["message"] = "posts retrieved successfully"
+
+        else:
+            #   UPDATE THE response
+            response['status_code'] = 409
+            response['posts'] = "none"
+            response['message'] = "there are no posts in the database"
+
+    #   RETURN THE response
+    return jsonify(response)
+
+
 #   ROUTE WILL BE USED TO VIEW A SINGLE PRODUCT, ROUTE ONLY ACCEPTS A GET METHOD
 @app.route('/get-post/<int:post_id>/', methods=["GET"])
 # @jwt_required()
@@ -403,7 +431,7 @@ def delete_post(post_id):
 
 
 #   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
-@app.route('/create-comment/<int:post_id>/<int:user_id>', methods=["POST"])
+@app.route('/create-comment/<int:post_id>/<int:user_id>/', methods=["POST"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
 # @jwt_required()
 def add_comment(post_id, user_id):
@@ -414,7 +442,6 @@ def add_comment(post_id, user_id):
     if request.method == "POST":
         try:
             today = date.today()
-
             #   GET THE FORM DATA TO BE SAVED
             comment = request.json['comment']
             date_created = today.strftime("%B %d, %Y")
