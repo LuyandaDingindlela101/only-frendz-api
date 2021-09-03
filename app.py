@@ -83,6 +83,8 @@ print(database.create_post_table())
 print(database.create_comment_table())
 #   CREATE THE COMMENT TABLE IF IT DOESNT EXIST
 print(database.create_friendship_table())
+#   CREATE THE COMMENT TABLE IF IT DOESNT EXIST
+print(database.create_like_table())
 
 #   GET ALL THE USERS IN THE DATABASE
 users = fetch_users()
@@ -566,6 +568,37 @@ def end_friendship(user_id, friend_id):
     #   UPDATE THE response
     response['status_code'] = 201
     response['message'] = "friendship ended"
+
+    return jsonify(response)
+
+
+@app.route("/get-likes/", methods=["GET"])
+def get_likes():
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    if request.method == "GET":
+        #   CALL THE delete_product AND PASS IN THE product_id
+        likes = database.get_likes()
+
+        #   UPDATE THE response
+        response["likes"] = likes
+        response['status_code'] = 201
+        response["message"] = "likes retrieved successfully"
+
+        return jsonify(response)
+
+
+@app.route("/add-like/<int:user_id>/<int:post_id>/", methods=["POST"])
+def add_like(user_id, post_id):
+    response = {}
+
+    if request.method == "POST":
+        database.add_like(user_id, post_id)
+
+        #   UPDATE THE response
+        response['status_code'] = 201
+        response['message'] = "like added"
 
     return jsonify(response)
 
