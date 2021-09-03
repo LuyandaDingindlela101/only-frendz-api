@@ -26,7 +26,7 @@ class Database:
     #   FUNCTION WILL CREATE THE PRODUCT TABLE
     def create_post_table(self):
         with sqlite3.connect(self.database_name) as connection:
-            connection.execute("CREATE TABLE IF NOT EXISTS post("
+            connection.execute("CREATE TABLE IF NOT EXISTS post ("
                                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                                "date_created TEXT DEFAULT 'NULL' NOT NULL,"
                                "post TEXT DEFAULT 'NULL' NOT NULL,"
@@ -40,7 +40,7 @@ class Database:
     #   FUNCTION WILL CREATE THE PRODUCT TABLE
     def create_comment_table(self):
         with sqlite3.connect(self.database_name) as connection:
-            connection.execute("CREATE TABLE IF NOT EXISTS comment("
+            connection.execute("CREATE TABLE IF NOT EXISTS comment ("
                                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                                "date_created TEXT DEFAULT 'NULL' NOT NULL,"
                                "comment TEXT DEFAULT 'NULL' NOT NULL,"
@@ -54,7 +54,7 @@ class Database:
     #   FUNCTION WILL CREATE THE PRODUCT TABLE
     def create_friendship_table(self):
         with sqlite3.connect(self.database_name) as connection:
-            connection.execute("CREATE TABLE IF NOT EXISTS friendship("
+            connection.execute("CREATE TABLE IF NOT EXISTS friendship ("
                                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                                "date_started TEXT DEFAULT 'NULL' NOT NULL,"
                                "user_id INTEGER NOT NULL,"
@@ -63,6 +63,19 @@ class Database:
                                "FOREIGN KEY (friend_id) REFERENCES user (id))")
 
         return "friendship table created successfully"
+
+    #   FUNCTION WILL CREATE THE PRODUCT TABLE
+    def create_like_table(self):
+        with sqlite3.connect(self.database_name) as connection:
+            connection.execute("CREATE TABLE IF NOT EXISTS like ("
+                               "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                               "like TEXT DEFAULT 'inactive' NOT NULL,"
+                               "user_id INTEGER NOT NULL, "
+                               "post_id INTEGER NOT NULL, "
+                               "FOREIGN KEY (user_id) REFERENCES user (id), "
+                               "FOREIGN KEY (post_id) REFERENCES post (id))")
+
+        return "like table created successfully"
 
     #   FUNCTION WILL GET ALL THE USERS IN THE DATABASE AND RETURN THEM
     def get_users(self):
@@ -228,3 +241,21 @@ class Database:
 
             connection.commit()
         return "friendship ended"
+
+    def add_like(self, user_id, post_id):
+        with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
+            cursor = connection.cursor()
+            cursor.execute(f"INSERT INTO like( like, user_id, post_id ) "
+                           f"VALUES( 'active', '{user_id}', '{post_id}' )")
+
+            connection.commit()
+        return "like added"
+
+    def get_likes(self):
+        with sqlite3.connect(self.database_name) as connection:
+            connection.row_factory = self.utilities.dict_factory
+            cursor = connection.cursor()
+            cursor.execute(f"SELECT * FROM like")
+
+        return cursor.fetchall()
