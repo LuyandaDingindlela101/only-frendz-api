@@ -6,8 +6,9 @@ from database_connection import Database
 
 from flask_mail import Mail
 from flask_cors import CORS
-from flask import Flask, request, jsonify
 from datetime import timedelta, date
+from flask import Flask, request, jsonify
+from flask_socketio import SocketIO, emit
 from flask_jwt import JWT, jwt_required, current_identity
 
 
@@ -70,6 +71,7 @@ app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=86400)
 CORS(app)
 mail = Mail(app)
 utilities = Utilities()
+socket_io = SocketIO(app)
 database = Database("only_frendz.db")
 jwt = JWT(app, authenticate, identity)
 
@@ -81,6 +83,7 @@ print(database.create_post_table())
 print(database.create_comment_table())
 #   CREATE THE COMMENT TABLE IF IT DOESNT EXIST
 print(database.create_friendship_table())
+
 #   GET ALL THE USERS IN THE DATABASE
 users = fetch_users()
 
@@ -565,3 +568,14 @@ def end_friendship(user_id, friend_id):
     response['message'] = "friendship ended"
 
     return jsonify(response)
+
+
+# @app.route("/message/")
+
+@socket_io.on("broadcast message")
+def message_display(data):
+    emit("show message", {"message": data["message"]}, broadcast=True)
+
+
+if __name__ == "__main__":
+    socket_io.run(app)
