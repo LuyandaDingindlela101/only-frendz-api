@@ -1,15 +1,23 @@
 #   IMPORT THE NEEDED MODULES
+import os
 import hmac
+import pathlib
+import requests
+import google.auth.transport.requests
+
 
 from utilities import Utilities
 from database_connection import Database
 
 from flask_mail import Mail
 from flask_cors import CORS
+from google.oauth2 import id_token
 from datetime import timedelta, date
-from flask import Flask, request, jsonify
+from pip._vendor import cachecontrol
 from flask_socketio import SocketIO, emit
+from google_auth_oauthlib.flow import Flow
 from flask_jwt import JWT, jwt_required, current_identity
+from flask import Flask, request, jsonify, session, abort, redirect, request
 
 
 class User:
@@ -92,11 +100,62 @@ users = fetch_users()
 username_table = {u.username: u for u in users}
 userid_table = {u.id: u for u in users}
 
+# SAVE THE CLIENT ID FOR LATER USE
+GOOGLE_CLIENT_ID = "426022957570-sfmofrh92038d3d352t23c2sggj9v381.apps.googleusercontent.com"
+client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "client_secret.json")
+
+# THE flow HOLDS INFORMATION ABOUT HOW WE WANT TO AUTHORISE THE USER
+flow = Flow.from_client_secrets_file(
+    client_secrets_file=client_secrets_file,
+    scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
+    redirect_uri="http://127.0.0.1:5000/callback"
+)
+
+# CUSTOM DECORATOR TO PROTECT SELECTED PAGES FROM UNAUTHORISED USERS BY TAKING IN A FUNCTION AS A PARAMETER
+def auth_required(function):
+    def wrapper(*args, **kwargs):
+        # CHECK IF google_id EXIST IS NOT IN LOCAL SESSION, THEN USER IS UNAUTHORISED
+        if "google_id" not in session:
+            return abort(401)
+        # IF google_id EXIST THEN RETURN THE PASSED IN function
+        else:
+            return function()
+
+    return wrapper
+
 
 @app.route('/protected')
 @jwt_required()
 def protected():
     return '%s' % current_identity
+
+
+# ROUTE WILL RECEIVE THE DATA FROM THE GOOGLE ENDPOINT
+@app.route("/callback")
+def callback():
+    # CREATES AN ACCESS TOKEN WITH THE URL PARAMETERS RECEIVED FROM THE GOOGLE CONSENT SCREEN
+    flow.fetch_token(authorization_response=request.url)
+
+    # CHECK IF SAVED state MATCHES RECEIVED state
+    if not session["state"] == request.args["state"]:
+        abort(500)
+
+    # GET AND SAVE THE credentials
+    credentials = flow.credentials
+    request_session = requests.session()
+    cached_session = cachecontrol.CacheControl(request_session)
+    token_request = google.auth.transport.requests.Request(session=cached_session)
+
+    # SAVE THE id_info
+    id_info = id_token.verify_oauth2_token(
+        id_token=credentials._id_token,
+        request=token_request,
+        audience=GOOGLE_CLIENT_ID
+    )
+
+    session["google_id"] = id_info.get("sub")
+    session["name"] = id_info.get("name")
+    return redirect("/protected_page")
 
 
 #   ROUTE WILL BE USED TO REGISTER A NEW USER, ROUTE ONLY ACCEPTS A POST METHOD
@@ -209,44 +268,24 @@ def update_user(user_id):
         return jsonify(response)
 
 
-#   ROUTE WILL BE USED TO LOG A REGISTERED USER IN, ROUTE ONLY ACCEPTS A POST METHOD
-@app.route("/user-login/", methods=["POST"])
+# LOGIN ROUTE WILL REDIRECT THE USER TO THE GOOGLE LOGIN SCREEN
+@app.route("/login/")
 def login():
-    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
-    response = {}
+    # authorization_url RETURNS AN AUTHORISATION URL AND THE STATE OF THE FLOW
+    authorization_url, state = flow.authorization_url()
+    # THE state IS AN OAUTH SECURITY FEATURE SENT BACK FROM AUTHORISATION SERVER
+    session["state"] = state
+    # REDIRECTS USER TO authorization_url
+    return redirect(authorization_url)
 
-    #   MAKE SURE THE request.method IS A POST
-    if request.method == "POST":
-        try:
-            #   GET THE FORM DATA TO BE SAVED
-            username = request.json['username']
-            password = request.json['password']
 
-            #   MAKE SURE THAT ALL THE ENTRIES ARE VALID
-            if utilities.not_empty(username) and utilities.not_empty(password):
-                #   CALL THE get_user FUNCTION TO GET THE user
-                user = database.get_user(username, password)
+# LOGOUT ROUTE WILL CLEAR USER DATA FROM LOCAL SESSION
+@app.route("/logout/")
+def logout():
+    # CLEAR THE USERS SESSION
+    session.clear()
+    return redirect("/")
 
-                #   IF user EXISTS, THEN LOG THE IN
-                if user:
-                    #   UPDATE THE response
-                    response["user"] = user
-                    response["status_code"] = 201
-                    response["message"] = "login successful"
-                else:
-                    #   UPDATE THE response
-                    response["user"] = "none"
-                    response["status_code"] = 409
-                    response["message"] = "login unsuccessful"
-        except ValueError:
-            #   UPDATE THE response
-            response["status_code"] = 409
-            response["user"] = "none"
-            response["message"] = "login unsuccessful"
-            response["email_status"] = "email not sent"
-        finally:
-            #   RETURN THE response
-            return jsonify(response)
 
 
 @app.route("/user/<int:user_id>/", methods=["GET"])
