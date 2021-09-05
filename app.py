@@ -17,7 +17,7 @@ from pip._vendor import cachecontrol
 from flask_socketio import SocketIO, emit
 from google_auth_oauthlib.flow import Flow
 from flask_jwt import JWT, jwt_required, current_identity
-from flask import Flask, request, jsonify, session, abort, redirect, request
+from flask import Flask, jsonify, session, abort, redirect, request
 
 
 class User:
@@ -108,7 +108,7 @@ client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "client_secret
 flow = Flow.from_client_secrets_file(
     client_secrets_file=client_secrets_file,
     scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
-    redirect_uri="http://127.0.0.1:5000/callback"
+    redirect_uri="https://only-frendz.herokuapp.com/callback"
 )
 
 # CUSTOM DECORATOR TO PROTECT SELECTED PAGES FROM UNAUTHORISED USERS BY TAKING IN A FUNCTION AS A PARAMETER
@@ -285,7 +285,6 @@ def logout():
     # CLEAR THE USERS SESSION
     session.clear()
     return redirect("/")
-
 
 
 @app.route("/user/<int:user_id>/", methods=["GET"])
