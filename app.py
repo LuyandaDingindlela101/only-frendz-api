@@ -111,6 +111,7 @@ flow = Flow.from_client_secrets_file(
     redirect_uri="https://only-frendz.herokuapp.com/callback"
 )
 
+
 # CUSTOM DECORATOR TO PROTECT SELECTED PAGES FROM UNAUTHORISED USERS BY TAKING IN A FUNCTION AS A PARAMETER
 def auth_required(function):
     def wrapper(*args, **kwargs):
@@ -155,7 +156,7 @@ def callback():
 
     session["google_id"] = id_info.get("sub")
     session["name"] = id_info.get("name")
-    return redirect("/protected_page")
+    return redirect("/home")
 
 
 #   ROUTE WILL BE USED TO REGISTER A NEW USER, ROUTE ONLY ACCEPTS A POST METHOD
@@ -483,25 +484,20 @@ def add_comment(post_id, user_id):
 
     #   MAKE SURE THE request.method IS A POST
     if request.method == "POST":
-        try:
-            today = date.today()
-            #   GET THE FORM DATA TO BE SAVED
-            comment = request.json['comment']
-            date_created = today.strftime("%B %d, %Y")
+        today = date.today()
+        #   GET THE FORM DATA TO BE SAVED
+        comment = request.json['comment']
+        date_created = today.strftime("%B %d, %Y")
 
-            #   CALL THE save_product FUNCTION TO SAVE THE PRODUCT TO THE DATABASE
-            database.create_comment(user_id, comment, post_id, date_created)
+        #   CALL THE save_product FUNCTION TO SAVE THE PRODUCT TO THE DATABASE
+        database.create_comment(user_id, comment, post_id, date_created)
 
-            #   UPDATE THE response
-            response["status_code"] = 201
-            response['message'] = "comment successfully added"
-        except ValueError:
-            #   UPDATE THE response
-            response["status_code"] = 409
-            response['message'] = "inputs are not valid"
-        finally:
-            #   RETURN THE response
-            return jsonify(response)
+        #   UPDATE THE response
+        response["status_code"] = 201
+        response['message'] = "comment successfully added"
+
+    #   RETURN THE response
+    return jsonify(response)
 
 
 #   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
