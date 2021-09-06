@@ -3,8 +3,8 @@ import os
 import hmac
 import pathlib
 import requests
+import urllib.request
 import google.auth.transport.requests
-
 
 from utilities import Utilities
 from database_connection import Database
@@ -14,10 +14,11 @@ from flask_cors import CORS
 from google.oauth2 import id_token
 from datetime import timedelta, date
 from pip._vendor import cachecontrol
+from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO, emit
 from google_auth_oauthlib.flow import Flow
 from flask_jwt import JWT, jwt_required, current_identity
-from flask import Flask, jsonify, session, abort, redirect, request
+from flask import Flask, jsonify, session, abort, redirect, flash, request, redirect, url_for
 
 
 class User:
@@ -62,6 +63,11 @@ def identity(payload):
     return userid_table.get(user_id, None)
 
 
+# FOLDER TO STORE ALL IMAGES
+UPLOAD_FOLDER = 'static/uploads/'
+# DEFINE FILE EXTENSIONS ALLOWED TO BE UPLOADED
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 app = Flask(__name__)
 app.debug = True
 
@@ -72,6 +78,8 @@ app.config['MAIL_USE_TLS'] = False
 app.config['SECRET_KEY'] = "super-secret"
 app.config['MAIL_PASSWORD'] = "!@mBvtmvn"
 app.config['MAIL_SERVER'] = "smtp.gmail.com"
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['MAIL_USERNAME'] = "notbrucewayne71@gmail.com"
 app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=86400)
 
@@ -107,9 +115,67 @@ client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "client_secret
 # THE flow HOLDS INFORMATION ABOUT HOW WE WANT TO AUTHORISE THE USER
 flow = Flow.from_client_secrets_file(
     client_secrets_file=client_secrets_file,
-    scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
+    scopes=[
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "openid"
+    ],
     redirect_uri="https://only-frendz.herokuapp.com/callback"
 )
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route('/upload_image/', methods=['POST'])
+def upload_image():
+    response = {}
+
+    if request.method == "POST":
+        # CHECK IF THERE ACTUALLY IS AN UPLOADED FILE
+        # if 'file' not in request.files:
+        #     # flash('No file part')
+        #     response["status_code"] = 409
+        #     response["message"] = "No file part"
+        #     return response
+
+            # return redirect(request.url)
+
+        file = request.files['file-input']
+        # CHECK IF THE FILENAME IS NOT EMPTY
+        if file.filename == '':
+            response["message"] = "No image selected for uploading"
+            # flash('No image selected for uploading')
+            response["request_url"] = request.url
+            # return redirect(request.url)
+
+        # CHECK IF THERE IS A FILE AND IT HAS AN APPROPRIATE FILE EXTENSION
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            # SAVE THE FILE IN THE UPLOAD_FOLDER
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            #print('upload_image filename: ' + filename)
+            response["message"] = "Image successfully uploaded and displayed below"
+            # flash('Image successfully uploaded and displayed below')
+            response["filename"] = filename
+            # return render_template('index.html', filename=filename)
+        else:
+            response["message"] = "Allowed image types are - png, jpg, jpeg, gif"
+            # flash('Allowed image types are - png, jpg, jpeg, gif')
+            response["request_url"] = request.url
+            # return redirect(request.url)
+
+        return response
+
+
+@app.route('/display/<filename>/')
+def display_image(filename):
+    response = { "file_url": url_for('static', filename='uploads/' + filename) }
+
+    return response
+    #print('display_image filename: ' + filename)
+    # return redirect(url_for('static', filename='uploads/' + filename), code=301)
 
 
 # CUSTOM DECORATOR TO PROTECT SELECTED PAGES FROM UNAUTHORISED USERS BY TAKING IN A FUNCTION AS A PARAMETER
