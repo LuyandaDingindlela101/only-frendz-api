@@ -18,7 +18,7 @@ from flask_cors import CORS, cross_origin
 from flask_socketio import SocketIO, emit
 from google_auth_oauthlib.flow import Flow
 from flask_jwt import JWT, jwt_required, current_identity
-from flask import Flask, jsonify, session, abort, request, redirect
+from flask import Flask, jsonify, session, abort, request, redirect, make_response
 
 
 class User:
@@ -108,22 +108,8 @@ cloudinary.config(cloud_name='dh3wphqx6',
                   api_key='423241384786932',
                   api_secret='ZPBD935sPztWSryQvv_QIFGNOP4')
 
-# SAVE THE CLIENT ID FOR LATER USE
-GOOGLE_CLIENT_ID = "426022957570-sfmofrh92038d3d352t23c2sggj9v381.apps.googleusercontent.com"
-client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "client_secret.json")
 
-# THE flow HOLDS INFORMATION ABOUT HOW WE WANT TO AUTHORISE THE USER
-flow = Flow.from_client_secrets_file(
-    client_secrets_file=client_secrets_file,
-    scopes=[
-        "https://www.googleapis.com/auth/userinfo.profile",
-        "https://www.googleapis.com/auth/userinfo.email",
-        "openid"
-    ],
-    redirect_uri="https://only-frendz.herokuapp.com/callback"
-)
-
-
+# FILE UPLOAD ==========================================================================================================
 @app.route("/upload", methods=['POST'])
 @cross_origin()
 def upload_file():
@@ -164,6 +150,23 @@ def protected():
     return '%s' % current_identity
 
 
+# GOOGLE CONSENT SCREEN ================================================================================================
+# SAVE THE CLIENT ID FOR LATER USE
+GOOGLE_CLIENT_ID = "426022957570-sfmofrh92038d3d352t23c2sggj9v381.apps.googleusercontent.com"
+client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "client_secret.json")
+
+# THE flow HOLDS INFORMATION ABOUT HOW WE WANT TO AUTHORISE THE USER
+flow = Flow.from_client_secrets_file(
+    client_secrets_file=client_secrets_file,
+    scopes=[
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "openid"
+    ],
+    redirect_uri="https://only-frendz.herokuapp.com/callback"
+)
+
+
 # ROUTE WILL RECEIVE THE DATA FROM THE GOOGLE ENDPOINT
 @app.route("/callback")
 def callback():
@@ -192,6 +195,26 @@ def callback():
     return redirect("https://only-frendz.netlify.app/home")
 
 
+# LOGIN ROUTE WILL REDIRECT THE USER TO THE GOOGLE LOGIN SCREEN
+@app.route("/login/")
+def login():
+    # authorization_url RETURNS AN AUTHORISATION URL AND THE STATE OF THE FLOW
+    authorization_url, state = flow.authorization_url()
+    # THE state IS AN OAUTH SECURITY FEATURE SENT BACK FROM AUTHORISATION SERVER
+    session["state"] = state
+    # REDIRECTS USER TO authorization_url
+    return redirect(authorization_url)
+
+
+# LOGOUT ROUTE WILL CLEAR USER DATA FROM LOCAL SESSION
+@app.route("/logout/")
+def logout():
+    # CLEAR THE USERS SESSION
+    session.clear()
+    return redirect("/")
+
+
+# USER ROUTES ==========================================================================================================
 #   ROUTE WILL BE USED TO REGISTER A NEW USER, ROUTE ONLY ACCEPTS A POST METHOD
 @app.route('/user-registration/', methods=["POST"])
 def register():
@@ -245,7 +268,9 @@ def register():
         response["email_status"] = "email not sent"
     finally:
         #   RETURN THE response
-        return jsonify(response)
+        response = make_response(response)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
 
 
 @app.route('/users/', methods=["GET"])
@@ -299,26 +324,9 @@ def update_user(user_id):
         response["email_status"] = "email not sent"
     finally:
         #   RETURN THE response
-        return jsonify(response)
-
-
-# LOGIN ROUTE WILL REDIRECT THE USER TO THE GOOGLE LOGIN SCREEN
-@app.route("/login/")
-def login():
-    # authorization_url RETURNS AN AUTHORISATION URL AND THE STATE OF THE FLOW
-    authorization_url, state = flow.authorization_url()
-    # THE state IS AN OAUTH SECURITY FEATURE SENT BACK FROM AUTHORISATION SERVER
-    session["state"] = state
-    # REDIRECTS USER TO authorization_url
-    return redirect(authorization_url)
-
-
-# LOGOUT ROUTE WILL CLEAR USER DATA FROM LOCAL SESSION
-@app.route("/logout/")
-def logout():
-    # CLEAR THE USERS SESSION
-    session.clear()
-    return redirect("/")
+        response = make_response(response)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
 
 
 @app.route("/user/<int:user_id>/", methods=["GET"])
@@ -346,7 +354,9 @@ def get_user(user_id):
         response['message'] = 'something went wrong'
     finally:
         #   RETURN THE response
-        return jsonify(response)
+        response = make_response(response)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
 
 
 #   ROUTE WILL BE USED TO LOG A REGISTERED USER IN, ROUTE ONLY ACCEPTS A POST METHOD
@@ -370,9 +380,12 @@ def delete_user(user_id):
         response['message'] = 'User not deleted'
     finally:
         #   RETURN THE response
-        return jsonify(response)
+        response = make_response(response)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
 
 
+# POST ROUTES ==========================================================================================================
 #   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
 @app.route('/create-post/', methods=["POST"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
@@ -404,7 +417,9 @@ def add_post():
             response['message'] = "inputs are not valid"
         finally:
             #   RETURN THE response
-            return jsonify(response)
+            response = make_response(response)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
 
 
 #   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
@@ -432,7 +447,9 @@ def get_posts():
             response['message'] = "there are no posts in the database"
 
     #   RETURN THE response
-    return jsonify(response)
+    response = make_response(response)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 #   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
@@ -460,7 +477,9 @@ def get_users_posts(user_id):
             response['message'] = "there are no posts in the database"
 
     #   RETURN THE response
-    return jsonify(response)
+    response = make_response(response)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 #   ROUTE WILL BE USED TO VIEW A SINGLE PRODUCT, ROUTE ONLY ACCEPTS A GET METHOD
@@ -487,7 +506,9 @@ def get_post(post_id):
             response["message"] = "product not found"
 
     #   RETURN THE response
-    return jsonify(response)
+    response = make_response(response)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 @app.route("/delete-post/<int:post_id>/", methods=["GET"])
@@ -504,9 +525,12 @@ def delete_post(post_id):
     response['status_code'] = 201
     response['message'] = "post deleted successfully."
 
-    return jsonify(response)
+    response = make_response(response)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
+# COMMENT ROUTES =======================================================================================================
 #   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
 @app.route('/create-comment/<int:post_id>/<int:user_id>/', methods=["POST"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
@@ -530,7 +554,9 @@ def add_comment(post_id, user_id):
         response['message'] = "comment successfully added"
 
     #   RETURN THE response
-    return jsonify(response)
+    response = make_response(response)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 #   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
@@ -558,7 +584,9 @@ def get_comments():
             response['message'] = "there are no comments in the database"
 
     #   RETURN THE response
-    return jsonify(response)
+    response = make_response(response)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 @app.route("/delete-comment/<int:comment_id>/", methods=["GET"])
@@ -575,9 +603,12 @@ def delete_comment(comment_id):
     response['status_code'] = 201
     response['message'] = "comment deleted successfully."
 
-    return jsonify(response)
+    response = make_response(response)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
+# FRIENDSHIP ROUTES ====================================================================================================
 @app.route("/make-friendship/<int:user_id>/<int:friend_id>/", methods=["POST"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
 # @jwt_required()
@@ -595,7 +626,9 @@ def make_friendship(user_id, friend_id):
     response['status_code'] = 201
     response['message'] = "friendship started"
 
-    return jsonify(response)
+    response = make_response(response)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 @app.route("/get-friends/<int:user_id>/", methods=["GET"])
@@ -619,7 +652,9 @@ def get_friends(user_id):
         response["friends"] = "none"
         response["message"] = "friends not found"
 
-    return jsonify(response)
+    response = make_response(response)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 @app.route("/end-friendship/<int:user_id>/<int:friend_id>/", methods=["GET"])
@@ -636,9 +671,12 @@ def end_friendship(user_id, friend_id):
     response['status_code'] = 201
     response['message'] = "friendship ended"
 
-    return jsonify(response)
+    response = make_response(response)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
+# LIKE ROUTES ==========================================================================================================
 @app.route("/get-likes/", methods=["GET"])
 def get_likes():
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
@@ -653,7 +691,9 @@ def get_likes():
         response['status_code'] = 201
         response["message"] = "likes retrieved successfully"
 
-        return jsonify(response)
+        response = make_response(response)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
 
 
 @app.route("/add-like/<int:user_id>/<int:post_id>/", methods=["POST"])
@@ -667,11 +707,12 @@ def add_like(user_id, post_id):
         response['status_code'] = 201
         response['message'] = "like added"
 
-    return jsonify(response)
+        response = make_response(response)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
 
 
-# @app.route("/message/")
-
+# SOCKET IO ROUTES =====================================================================================================
 @socket_io.on("broadcast message")
 def message_display(data):
     emit("show message", {"message": data["message"]}, broadcast=True)
