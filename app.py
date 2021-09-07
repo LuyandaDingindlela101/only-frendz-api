@@ -286,6 +286,8 @@ def get_users():
     response["status_code"] = 201
     response["message"] = "users successfully retrieved"
 
+    response = make_response(response)
+    response.headers['Access-Control-Allow-Origin'] = '*'
     return response
 
 
