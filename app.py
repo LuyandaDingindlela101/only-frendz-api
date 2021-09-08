@@ -202,6 +202,7 @@ def login():
     authorization_url, state = flow.authorization_url()
     # THE state IS AN OAUTH SECURITY FEATURE SENT BACK FROM AUTHORISATION SERVER
     session["state"] = state
+    print(session["state"])
     # REDIRECTS USER TO authorization_url
     return redirect(authorization_url)
 
@@ -422,6 +423,38 @@ def add_post():
             response = make_response(response)
         response.headers['Access-Control-Allow-Origin'] = '*'
         return response
+
+
+#   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
+@app.route('/update-post/<int:post_id>/', methods=["POST"])
+#   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+# @jwt_required()
+def update_post(post_id):
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    #   MAKE SURE THE request.method IS A POST
+    if request.method == "POST":
+        try:
+            #   GET THE FORM DATA TO BE SAVED
+            post = request.json['post']
+            image_url = request.json['image_url']
+
+            #   CALL THE save_product FUNCTION TO SAVE THE PRODUCT TO THE DATABASE
+            database.update_post(post_id, post, image_url)
+
+            #   UPDATE THE response
+            response["status_code"] = 201
+            response['message'] = "post successfully updated"
+        except ValueError:
+            #   UPDATE THE response
+            response["status_code"] = 409
+            response['message'] = "something went wrong"
+        finally:
+            #   RETURN THE response
+            response = make_response(response)
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            return response
 
 
 #   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
