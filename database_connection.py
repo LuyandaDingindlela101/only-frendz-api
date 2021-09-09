@@ -7,6 +7,7 @@ class Database:
         self.database_name = database_name
         self.utilities = Utilities()
 
+    # TABLES CREATION ==================================================================================================
     #   FUNCTION WILL CREATE THE USER TABLE
     def create_user_table(self):
         with sqlite3.connect(self.database_name) as connection:
@@ -77,6 +78,7 @@ class Database:
 
         return "like table created successfully"
 
+    # USER FUNCTIONS ===================================================================================================
     #   FUNCTION WILL GET ALL THE USERS IN THE DATABASE AND RETURN THEM
     def get_users(self):
         with sqlite3.connect(self.database_name) as connection:
@@ -135,6 +137,7 @@ class Database:
             connection.commit()
         return "user edited"
 
+    # POST FUNCTIONS ===================================================================================================
     #   FUNCTION WILL SAVE A PRODUCT TO THE DATABASE
     def create_post(self, user_id, post, image_url, date_created):
         with sqlite3.connect(self.database_name) as connection:
@@ -195,6 +198,7 @@ class Database:
             connection.commit()
         return "post deleted"
 
+    # COMMENT FUNCTIONS ================================================================================================
     #   FUNCTION WILL SAVE A PRODUCT TO THE DATABASE
     def create_comment(self, user_id, comment, post_id, date_created):
         with sqlite3.connect(self.database_name) as connection:
@@ -226,6 +230,7 @@ class Database:
             connection.commit()
         return "comment deleted"
 
+    # FRIENDSHIP FUNCTIONS =============================================================================================
     def create_friendship(self, user_id, friend_id, date_started):
         with sqlite3.connect(self.database_name) as connection:
             connection.row_factory = self.utilities.dict_factory
@@ -253,6 +258,7 @@ class Database:
             connection.commit()
         return "friendship ended"
 
+    # LIKE FUNCTIONS ===================================================================================================
     def add_like(self, user_id, post_id):
         with sqlite3.connect(self.database_name) as connection:
             connection.row_factory = self.utilities.dict_factory

@@ -533,12 +533,12 @@ def get_post(post_id):
             #   UPDATE THE response
             response["status_code"] = 201
             response["post"] = post
-            response["message"] = "product retrieved successfully"
+            response["message"] = "post retrieved successfully"
         else:
             #   UPDATE THE response
             response["status_code"] = 409
             response["post"] = "none"
-            response["message"] = "product not found"
+            response["message"] = "post not found"
 
     #   RETURN THE response
     response = make_response(response)
