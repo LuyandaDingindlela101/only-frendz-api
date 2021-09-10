@@ -127,11 +127,13 @@ class Database:
             connection.commit()
         return "user deleted"
 
-    def update_user(self, id, bio, password, username, fullname, phone_number, email_address):
+    def update_user(self, id, bio, password, username, fullname, phone_number, email_address, profile_img):
         with sqlite3.connect(self.database_name) as connection:
             cursor = connection.cursor()
-            cursor.execute(f"UPDATE user SET bio = '{bio}', password = '{password}', username = '{username}', "
-                           f"fullname = '{fullname}', phone_number = '{phone_number}', email_address = '{email_address}' "
+            cursor.execute(f"UPDATE user SET bio = '{bio}', password = '{password}', "
+                           f"username = '{username}', fullname = '{fullname}', "
+                           f"phone_number = '{phone_number}', email_address = '{email_address}', "
+                           f"profile_img = '{profile_img}' "
                            f"WHERE id = '{id}'")
 
             connection.commit()

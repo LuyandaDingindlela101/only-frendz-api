@@ -309,15 +309,11 @@ def update_user(user_id):
             email_address = request.json['email_address']
             profile_img = request.json['profile_picture']
 
-            #   MAKE SURE THAT ALL THE ENTRIES ARE VALID
-            if utilities.not_empty(username) and utilities.not_empty(password) and utilities.not_empty(email_address) \
-                    and utilities.not_empty(fullname) and utilities.not_empty(profile_img) \
-                    and utilities.not_empty(phone_number) and utilities.is_email(email_address):
-                #   CALL THE get_user FUNCTION TO GET THE user
-                database.update_user(user_id, bio, password, username, fullname, phone_number, email_address)
-                #   UPDATE THE response
-                response["status_code"] = 201
-                response["message"] = "update successful"
+            #   CALL THE get_user FUNCTION TO GET THE user
+            database.update_user(user_id, bio, password, username, fullname, phone_number, email_address, profile_img)
+            #   UPDATE THE response
+            response["status_code"] = 201
+            response["message"] = "update successful"
     except ValueError:
         #   UPDATE THE response
         response["status_code"] = 409
