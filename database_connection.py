@@ -170,17 +170,6 @@ class Database:
 
             return cursor.fetchall()
 
-    #   FUNCTION WILL GET ALL THE PRODUCTS FROM THE DATABASE AND RETURN THEM
-    def update_post(self, post_id, post, image_url):
-        with sqlite3.connect(self.database_name) as connection:
-            connection.row_factory = self.utilities.dict_factory
-            cursor = connection.cursor()
-            cursor.execute(f"UPDATE post "
-                           f"SET post = '{post}', image_url = '{image_url}' "
-                           f"WHERE id = '{post_id}'")
-
-            return cursor.fetchall()
-
     #   FUNCTION WILL GET A PRODUCT FROM THE DATABASE WHICH MATCHES THE PROVIDED ID
     def get_post(self, post_id):
         with sqlite3.connect(self.database_name) as connection:

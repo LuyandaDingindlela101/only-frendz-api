@@ -230,35 +230,37 @@ def register():
             password = request.json['password']
             email_address = request.json['email_address']
 
-            #   CALL THE get_user FUNCTION TO GET THE user
-            user = database.get_user(username, password)
-
-            #   IF user EXISTS, THEN LOG THE IN
-            if user:
-                response["status_code"] = 409
-                response["message"] = "user already exists"
-                response["email_status"] = "email not sent"
-            else:
-                #   CALL THE register_user FUNCTION TO REGISTER THE USER
-                database.register_user(password, username, email_address)
-
-                #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
-                subject = "Only Frendz account registration"
-                message = "Congratulations on a successful registration to Only Frendz. Lets make some frendz."
-                utilities.send_email(mail, email_address, subject, message)
-
-                #   UPDATE THE GLOBAL users
-                global users
-                users = fetch_users()
-
-                #   GET THE NEWLY REGISTERED USER
+            #   MAKE SURE THAT ALL THE ENTRIES ARE VALID
+            if utilities.not_empty(username) and utilities.not_empty(password) and utilities.not_empty(
+                    email_address) and utilities.is_email(email_address):
+                #   CALL THE get_user FUNCTION TO GET THE user
                 user = database.get_user(username, password)
 
-                #   UPDATE THE response
-                response["user"] = user
-                response["status_code"] = 201
-                response["message"] = "registration successful"
-                response["email_status"] = "Email was successfully sent"
+                #   IF user EXISTS, THEN LOG THE IN
+                if user:
+                    response["status_code"] = 409
+                    response["message"] = "user already exists"
+                    response["email_status"] = "email not sent"
+                else:
+                    #   CALL THE register_user FUNCTION TO REGISTER THE USER
+                    database.register_user(password, username, email_address)
+                    #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
+                    subject = "Only Frendz account registration"
+                    message = "Congratulations on a successful registration. Lets make some frendz."
+                    utilities.send_email(mail, email_address, subject, message)
+
+                    #   UPDATE THE GLOBAL users
+                    global users
+                    users = fetch_users()
+
+                    #   GET THE NEWLY REGISTERED USER
+                    user = database.get_user(username, password)
+
+                    #   UPDATE THE response
+                    response["user"] = user
+                    response["status_code"] = 201
+                    response["message"] = "registration successful"
+                    response["email_status"] = "Email was successfully sent"
     except ValueError:
         #   UPDATE THE response
         response["status_code"] = 409
@@ -386,6 +388,7 @@ def delete_user(user_id):
 #   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
 @app.route('/create-post/', methods=["POST"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+# @jwt_required()
 def add_post():
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -418,39 +421,9 @@ def add_post():
         return response
 
 
-#   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
-@app.route('/update-post/<int:post_id>/', methods=["POST"])
-#   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
-def update_post(post_id):
-    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
-    response = {}
-
-    #   MAKE SURE THE request.method IS A POST
-    if request.method == "POST":
-        try:
-            #   GET THE FORM DATA TO BE SAVED
-            post = request.json['post']
-            image_url = request.json['image_url']
-
-            #   CALL THE save_product FUNCTION TO SAVE THE PRODUCT TO THE DATABASE
-            database.update_post(post_id, post, image_url)
-
-            #   UPDATE THE response
-            response["status_code"] = 201
-            response['message'] = "post successfully updated"
-        except ValueError:
-            #   UPDATE THE response
-            response["status_code"] = 409
-            response['message'] = "something went wrong"
-        finally:
-            #   RETURN THE response
-            response = make_response(response)
-            response.headers['Access-Control-Allow-Origin'] = '*'
-            return response
-
-
 #   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
 @app.route('/get-posts/', methods=["GET"])
+# @jwt_required()
 def get_posts():
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -480,6 +453,7 @@ def get_posts():
 
 #   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
 @app.route('/get-posts/<int:user_id>/', methods=["GET"])
+# @jwt_required()
 def get_users_posts(user_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -509,6 +483,7 @@ def get_users_posts(user_id):
 
 #   ROUTE WILL BE USED TO VIEW A SINGLE PRODUCT, ROUTE ONLY ACCEPTS A GET METHOD
 @app.route('/get-post/<int:post_id>/', methods=["GET"])
+# @jwt_required()
 def get_post(post_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -537,6 +512,7 @@ def get_post(post_id):
 
 @app.route("/delete-post/<int:post_id>/", methods=["GET"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+# @jwt_required()
 def delete_post(post_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -557,6 +533,7 @@ def delete_post(post_id):
 #   ROUTE WILL BE USED TO ADD A NEW PRODUCT, ROUTE ONLY ACCEPTS A POST METHOD
 @app.route('/create-comment/<int:post_id>/<int:user_id>/', methods=["POST"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+# @jwt_required()
 def add_comment(post_id, user_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -583,6 +560,7 @@ def add_comment(post_id, user_id):
 
 #   ROUTE WILL BE USED TO VIEW ALL PRODUCTS, ROUTE ONLY ACCEPTS A GET METHOD
 @app.route('/get-comments/', methods=["GET"])
+# @jwt_required()
 def get_comments():
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -612,6 +590,7 @@ def get_comments():
 
 @app.route("/delete-comment/<int:comment_id>/", methods=["GET"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+# @jwt_required()
 def delete_comment(comment_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -631,6 +610,7 @@ def delete_comment(comment_id):
 # FRIENDSHIP ROUTES ====================================================================================================
 @app.route("/make-friendship/<int:user_id>/<int:friend_id>/", methods=["POST"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+# @jwt_required()
 def make_friendship(user_id, friend_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -652,6 +632,7 @@ def make_friendship(user_id, friend_id):
 
 @app.route("/get-friends/<int:user_id>/", methods=["GET"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+# @jwt_required()
 def get_friends(user_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -677,6 +658,7 @@ def get_friends(user_id):
 
 @app.route("/end-friendship/<int:user_id>/<int:friend_id>/", methods=["GET"])
 #   AN AUTHORISATION TOKEN IS NEEDED TO ACCESS THIS ROUTE
+# @jwt_required()
 def end_friendship(user_id, friend_id):
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
@@ -729,5 +711,11 @@ def add_like(user_id, post_id):
         return response
 
 
+# SOCKET IO ROUTES =====================================================================================================
+@socket_io.on("broadcast message")
+def message_display(data):
+    emit("show message", {"message": data["message"]}, broadcast=True)
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    socket_io.run(app)
